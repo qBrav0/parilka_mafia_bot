@@ -307,8 +307,13 @@ class GameManager:
             else:
                 killed = mafia_target
                 # Mark player as dead
+                room = await self.storage.get_room(room_id)
+                day_number = room.get("day_number", "1") if room else "1"
                 await self.storage.update_player(
-                    room_id, killed, is_alive="false"
+                    room_id, killed,
+                    is_alive="false",
+                    death_cause="night_kill",
+                    death_day=day_number,
                 )
                 # Update game state counts
                 game_state = await self.storage.get_game_state(room_id)
@@ -399,8 +404,13 @@ class GameManager:
 
         if len(top_players) == 1:
             eliminated = int(top_players[0])
+            room = await self.storage.get_room(room_id)
+            day_number = room.get("day_number", "1") if room else "1"
             await self.storage.update_player(
-                room_id, eliminated, is_alive="false"
+                room_id, eliminated,
+                is_alive="false",
+                death_cause="voted_out",
+                death_day=day_number,
             )
             # Update counts
             game_state = await self.storage.get_game_state(room_id)
@@ -538,8 +548,13 @@ class GameManager:
         )
 
         if killed:
+            room = await self.storage.get_room(room_id)
+            day_number = room.get("day_number", "1") if room else "1"
             await self.storage.update_player(
-                room_id, user_id, is_alive="false"
+                room_id, user_id,
+                is_alive="false",
+                death_cause="shout_penalty",
+                death_day=day_number,
             )
             game_state = await self.storage.get_game_state(room_id)
             if game_state:

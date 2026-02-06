@@ -12,8 +12,9 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.redis import RedisStorage as AiogramRedisStorage
 
-from config import BOT_TOKEN, REDIS_URL
+from config import BOT_TOKEN, DATABASE_URL, REDIS_URL
 from handlers import get_all_routers
+from services.stats_service import StatsService
 from services.timer_service import TimerService
 from storage.redis_storage import RedisStorage
 
@@ -44,6 +45,22 @@ async def main() -> None:
     # Timer service
     timer_service = TimerService(bot)
 
+    # Statistics service (optional — only if DATABASE_URL is set)
+    stats_service = None
+    if DATABASE_URL:
+        stats_service = StatsService(DATABASE_URL)
+        await stats_service.connect()
+        if stats_service.available:
+            logger.info("Stats service enabled (PostgreSQL)")
+        else:
+            logger.warning("Stats service failed to connect — running without stats")
+            stats_service = None
+    else:
+        logger.info("DATABASE_URL not set — running without stats")
+
+    # Attach stats_service to bot so handlers can access it via getattr(bot, ...)
+    bot.stats_service = stats_service  # type: ignore[attr-defined]
+
     # Create dispatcher
     dp = Dispatcher(storage=fsm_storage)
 
@@ -67,6 +84,8 @@ async def main() -> None:
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
     finally:
+        if stats_service:
+            await stats_service.close()
         await game_storage.close()
         await bot.session.close()
         logger.info("Bot stopped.")

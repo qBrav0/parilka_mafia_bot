@@ -890,6 +890,33 @@ async def _resolve_and_announce_night(bot, storage, room_id, gm, timer_service):
             except Exception:
                 pass
 
+            # Record sheriff check accuracy for stats
+            stats_svc = getattr(bot, "stats_service", None)
+            if stats_svc:
+                try:
+                    was_correct = result["sheriff_result"] == "mafia"
+                    await stats_svc.record_sheriff_check(
+                        int(sp["user_id"]), was_correct
+                    )
+                except Exception:
+                    pass
+
+    # Record doctor save attempt for stats
+    stats_svc = getattr(bot, "stats_service", None)
+    if stats_svc:
+        doctor_save_raw = await storage.get_doctor_save(room_id, night_num)
+        if doctor_save_raw:
+            doctor_players = await storage.get_alive_players_by_role(
+                room_id, ROLE_DOCTOR
+            )
+            for dp in doctor_players:
+                try:
+                    await stats_svc.record_doctor_save(
+                        int(dp["user_id"]), result["saved"]
+                    )
+                except Exception:
+                    pass
+
     # Announce night results to everyone
     if result["killed"]:
         killed_player = await storage.get_player(room_id, result["killed"])
@@ -1465,6 +1492,23 @@ async def _after_last_word(bot, storage, room_id, gm, timer_service):
 
 async def _announce_game_over(bot, storage, room_id, gm, winner):
     """Announce game over."""
+    # Collect stats BEFORE cleanup (data is still in Redis)
+    stats_service = getattr(bot, "stats_service", None)
+    if stats_service:
+        try:
+            players = await storage.get_all_players_data(room_id)
+            room = await storage.get_room(room_id)
+            day_count = int(room.get("day_number", "1")) if room else 1
+            # started_at was stored as joined_at of first player; use None for now
+            await stats_service.record_game(
+                room_id=room_id,
+                winner=winner,
+                players=players,
+                day_count=day_count,
+            )
+        except Exception as e:
+            logger.warning("Failed to record game stats: %s", e)
+
     await gm.transition_to_finished(room_id)
 
     from services.room_manager import RoomManager

@@ -26,8 +26,6 @@ from keyboards import (
     WAITING_ROOM_KB,
     nominate_keyboard,
     player_select_keyboard,
-    role_settings_keyboard,
-    start_game_keyboard,
     voting_keyboard,
 )
 from services.game_manager import (
@@ -187,7 +185,7 @@ async def on_start_game(
             custom_doctor = hd == "true"
 
     gm = GameManager(storage)
-    assignments = await gm.start_game(room_id, custom_mafia, custom_doctor)
+    await gm.start_game(room_id, custom_mafia, custom_doctor)
 
     # Broadcast "game started" to all
     from services.room_manager import RoomManager
@@ -663,10 +661,6 @@ async def _start_night_phase(bot, storage, room_id, gm, timer_service):
     """Start the full night phase sequence: mafia -> sheriff -> doctor."""
     await gm.transition_to_night(room_id)
 
-    from services.room_manager import RoomManager
-
-    rm = RoomManager(storage)
-    all_chat_ids = await rm.get_player_chat_ids(room_id)
 
     # Send night message to civilians
     alive_players = await storage.get_alive_players(room_id)
@@ -1192,10 +1186,6 @@ async def _start_voting(bot, storage, room_id, gm, timer_service, revote_players
     room = await storage.get_room(room_id)
     day_num = int(room.get("day_number", "1"))
     voting_time = int(room.get("voting_time", "30"))
-
-    from services.room_manager import RoomManager
-
-    rm = RoomManager(storage)
 
     # Get nominated players data
     if revote_players:

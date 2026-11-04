@@ -9,7 +9,7 @@ from typing import Optional
 from aiogram import Bot
 from aiogram.types import Message
 
-from utils import broadcast_media, broadcast_message
+from utils import broadcast_message
 
 logger = logging.getLogger(__name__)
 

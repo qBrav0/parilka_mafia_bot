@@ -14,8 +14,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 import messages as msg
-from keyboards import IN_GAME_KB, MAIN_MENU_KB, WAITING_ROOM_KB
-from states import GameStates, MenuStates
+from keyboards import MAIN_MENU_KB
 
 logger = logging.getLogger(__name__)
 router = Router(name="start")

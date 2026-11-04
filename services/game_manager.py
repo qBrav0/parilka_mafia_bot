@@ -208,18 +208,12 @@ class GameManager:
 
     async def transition_to_night(self, room_id: str) -> None:
         """Transition to night phase."""
-        room = await self.storage.get_room(room_id)
-        day_number = int(room.get("day_number", "1"))
-
         await self.storage.update_room(room_id, status="night")
         await self.storage.update_game_state(room_id, phase="night")
         await self.storage.refresh_room_ttl(room_id)
 
     async def transition_to_day(self, room_id: str) -> None:
         """Transition to day speaking phase."""
-        room = await self.storage.get_room(room_id)
-        day_number = int(room.get("day_number", "1"))
-
         await self.storage.update_room(
             room_id, status="day_speaking", current_speaker_index="0"
         )
@@ -278,7 +272,6 @@ class GameManager:
         mafia_target = None
         mafia_miss = True
         if mafia_choices:
-            targets = list(mafia_choices.values())
             living_mafia_ids = {str(p["user_id"]) for p in alive_mafia}
             # Only count choices from alive mafia
             relevant_choices = {

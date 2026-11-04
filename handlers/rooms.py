@@ -15,7 +15,6 @@ from aiogram.types import Message
 
 import messages as msg
 from keyboards import (
-    IN_GAME_KB,
     MAIN_MENU_KB,
     WAITING_ROOM_KB,
     max_players_keyboard,

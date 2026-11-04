@@ -9,7 +9,6 @@ Handles:
 - Last word voice messages
 """
 
-import asyncio
 import logging
 
 from aiogram import F, Router
@@ -17,15 +16,13 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 import messages as msg
-from keyboards import IN_GAME_KB, MAIN_MENU_KB, nominate_button_keyboard
+from keyboards import nominate_button_keyboard
 from services.audio_handler import get_media_info, validate_audio_duration
 from services.game_manager import (
-    MAFIA_ROLES,
     ROLE_DON,
     ROLE_MAFIA,
     GameManager,
 )
-from states import GameStates
 from utils import (
     broadcast_media,
     broadcast_message,
